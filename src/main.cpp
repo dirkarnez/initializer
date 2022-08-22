@@ -26,7 +26,7 @@ using namespace std;
 
 string escape_string_for_regex(string str)
 {
-   const regex esc("[.^$|()\\[\\]{}*+?\"\\\\]");
+   const regex esc("[.^$|:()\\[\\]{}*+?\"\\\\]");
    const string rep("\\\\&");
    return regex_replace(str, esc, rep, regex_constants::match_default | regex_constants::format_sed);
 }
@@ -63,56 +63,63 @@ string read_file_content(const string &path)
       exit(EXIT_FAILURE);
    };
 
-    std::stringstream strStream;
-    strStream << input_file.rdbuf(); //read the file
-    return strStream.str(); //str holds the content of the file
+   std::stringstream strStream;
+   strStream << input_file.rdbuf(); // read the file
+   return strStream.str();          // str holds the content of the file
 }
 
-struct placeholder {
+struct placeholder
+{
    string haystack;
    string needle;
    string occurrence;
 };
 
-struct entry {
+struct entry
+{
    string file_name;
    vector<placeholder> placeholder_vector;
 };
 
-class init_file_loader {
+class init_file_loader
+{
 private:
-   //std::vector<std::unordered_map<string, std::vector<std::map<string, string>>>> data;
    std::vector<entry> data;
+
 public:
-   init_file_loader(const string file_name = "initfile.yaml") {
+   init_file_loader(const string file_name = "initfile.yaml")
+   {
       YAML::Node yaml = YAML::LoadFile(file_name);
-      
-      for (YAML::const_iterator it = yaml.begin(); it != yaml.end(); ++it) {
+
+      for (YAML::const_iterator it = yaml.begin(); it != yaml.end(); ++it)
+      {
          vector<placeholder> placeholder_vector;
 
          auto temp = it->second.as<std::vector<std::map<string, string>>>();
 
-         for (auto it2 = temp.cbegin(); it2 != temp.cend(); ++it2) {
+         for (auto it2 = temp.cbegin(); it2 != temp.cend(); ++it2)
+         {
             std::map<string, string> map = *it2;
             placeholder p = {
-               haystack:  map["haystack"],
-               needle:  map["needle"],
-               occurrence:  map["occurrence"]
+               haystack : map["haystack"],
+               needle : map["needle"],
+               occurrence : map["occurrence"]
             };
 
             placeholder_vector.push_back(p);
          }
 
          entry e = {
-            file_name: it->first.as<string>(),
-            placeholder_vector: placeholder_vector
+            file_name : it->first.as<string>(),
+            placeholder_vector : placeholder_vector
          };
 
          data.push_back(e);
       }
    }
 
-   std::vector<entry> get_data() {
+   std::vector<entry> get_data()
+   {
       return data;
    }
 };
@@ -121,10 +128,11 @@ int main()
 {
    init_file_loader loader;
    auto data = loader.get_data();
-   
+
    string temp;
 
-   for (int i = 0; i < data.size(); i++) {
+   for (int i = 0; i < data.size(); i++)
+   {
       // TODO
       bool pass = false;
 
@@ -137,34 +145,32 @@ int main()
          auto current = e.placeholder_vector.at(i);
          cout << current.haystack << ":" << substr_occurrence(s, current.haystack) << endl;
          // TODO: occurance check
-         
+
          auto escaped = escape_string_for_regex(current.haystack);
          auto replacement = escaped;
          ss_expr << "(" + escaped + ")";
-         auto pos = replacement.find(current.needle);
-         if (pos == replacement.npos) {
+         auto pos = current.haystack.find(current.needle);
+         cout << "needle:" << current.needle;
+         if (pos == std::string::npos)
+         {
             cerr << "invalid";
             return EXIT_FAILURE;
          }
-         ss_format << "(?" << (i + 1) << replacement.replace(pos, current.needle.length(), "ypypoypoy") << ")";
+         ss_format << "(?" << (i + 1) << escape_string_for_regex(current.haystack.replace(pos, current.needle.length(), "ypypoypoy")) << ")";
 
-         if (i < e.placeholder_vector.size() - 1) {
+         if (i < e.placeholder_vector.size() - 1)
+         {
             ss_expr << "|";
          }
       }
-      
+
       boost::regex e2(ss_expr.str());
-      // //e2.assign("(" + escape_string_for_regex(current.haystack) + ")|(def)");
-      // //"(?1<1>$&</1>)
-      // auto src = escape_string_for_regex(current.haystack);
-
-      // auto new_content = 
-      // temp = new_content;
-
-      // string format_string = "(?1" + temp + ")(?2<2>$&<2>)";
-      auto c = boost::regex_replace(s, e2, ss_format.str().c_str(), boost::match_default | boost::format_all);
+      
+      string format = ss_format.str();
+      cout << "format:" << format << endl;
+      auto c = boost::regex_replace(s, e2, format.c_str(), boost::match_default | boost::format_all);
       std::cout << c;
-      std::ofstream out("output.txt");
+      std::ofstream out(e.file_name);
       out << c;
       out.close();
    }
