@@ -57,58 +57,90 @@ string read_file_content(const string &path)
    return string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
 }
 
-class {
+struct placeholder {
+   string haystack;
+   string needle;
+   string occurrence;
+};
 
-}
-int main()
-{
-   YAML::Node yaml = YAML::LoadFile("config.yaml");
+struct entry {
+   string file_name;
+   vector<placeholder> placeholder_vector;
+};
 
-   for (YAML::const_iterator it = yaml.begin(); it != yaml.end(); ++it) {
-      auto fileName = it->first.as<string>();
-      cout << "fileName:" << fileName << endl;
-      auto b = it->second.as<std::vector<std::map<string, string>>>();
-      for (int i = 0; i < b.size(); i++)
-      {
-         
-         cout << "haystack:" << b.at(i)["haystack"] <<endl;
-         cout << "needle:" << b.at(i)["needle"] <<endl;
-         cout << "occurrence:" << b.at(i)["occurrence"] <<endl;
+class init_file_loader {
+private:
+   //std::vector<std::unordered_map<string, std::vector<std::map<string, string>>>> data;
+   std::vector<entry> data;
+public:
+   init_file_loader(const string file_name = "initfile.yaml") {
+      YAML::Node yaml = YAML::LoadFile(file_name);
+      
+      for (YAML::const_iterator it = yaml.begin(); it != yaml.end(); ++it) {
+         vector<placeholder> placeholder_vector;
+
+         auto temp = it->second.as<std::vector<std::map<string, string>>>();
+
+         for (auto it2 = temp.cbegin(); it2 != temp.cend(); ++it2) {
+            std::map<string, string> map = *it2;
+            placeholder p = {
+               haystack:  map["haystack"],
+               needle:  map["needle"],
+               occurrence:  map["occurrence"]
+            };
+
+            placeholder_vector.push_back(p);
+         }
+
+         entry e = {
+            file_name: it->first.as<string>(),
+            placeholder_vector: placeholder_vector
+         };
+
+         data.push_back(e);
       }
    }
 
-
-   cout << "==================";
-
-   const vector<array<string, 3>> config = {
-       {"project(\"AMA2104-playground\")",
-        "AMA2104-playground",
-        "1"},
-       {"set\\(CMAKE_CXX_STANDARD 17\\)",
-        "17",
-        "1"}};
-
-   std::string s = read_file_content("CMakeLists.txt");
-
-   for (size_t i = 0; i < config.size() - 1; i++)
-   {
-      auto current = config[i].at(0);
-      cout << current << ":" << substr_occurrence(s, current) << endl;
+   std::vector<entry> get_data() {
+      return data;
    }
+};
 
-   std::cout << "++++++++++++++++++++replacing" << std::endl;
+int main()
+{
+   init_file_loader loader;
+   auto data = loader.get_data();
+   
+   string temp;
+
+   for (int i = 0; i < data.size(); i++) {
+      // TODO
+      bool pass = false;
+
+      auto e = data.at(i);
+      std::string s = read_file_content(e.file_name);
+      for (size_t i = 0; i < e.placeholder_vector.size(); i++)
+      {
+         auto current = e.placeholder_vector.at(i);
+         cout << current.haystack << ":" << substr_occurrence(s, current.haystack) << endl;
+         // TODO: occurance check
+         
+
+
+      }
+   } 
 
    boost::regex e2;
-   e2.assign("(" + escape_string_for_regex(config.at(0).at(0)) + ")|(def)");
+   e2.assign("(" + escape_string_for_regex(current.haystack) + ")|(def)");
    //"(?1<1>$&</1>)
-   auto src = escape_string_for_regex(config.at(0).at(0));
+   auto src = escape_string_for_regex(current.haystack);
 
-   auto new_content = src.replace(src.find(config.at(0).at(1)), config.at(0).at(1).length(), "ypypoypoy");
-
-   string format_string = "(?1" + new_content + ")(?2<2>$&<2>)";
+   auto new_content = src.replace(src.find(current.needle), current.needle.length(), "ypypoypoy");
+   temp = new_content;
+   
+   string format_string = "(?1" + temp + ")(?2<2>$&<2>)";
 
    auto c = boost::regex_replace(s, e2, format_string.c_str(), boost::match_default | boost::format_all);
-
    std::cout << c;
    std::cin.get();
    return 0;
