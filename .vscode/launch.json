@@ -15,7 +15,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "compilerPath": "D:\\Softwares\\x86_64-8.1.0-release-posix-seh-rt_v6-rev0\\bin\\gcc.exe",
+            "compilerPath": "D:\\Softwares\\x86_64-8.1.0-release-posix-seh-rt_v6-rev0\\mingw6\\bin\\gcc.exe",
             "miDebuggerPath": "D:\\Softwares\\x86_64-8.1.0-release-posix-seh-rt_v6-rev0\\mingw64\\bin\\gdb.exe",
             "setupCommands": [
                 {
