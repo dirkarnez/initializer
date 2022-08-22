@@ -47,14 +47,25 @@ int substr_occurrence(string str, string sub_str)
 
 string read_file_content(const string &path)
 {
-   ifstream input_file(path);
+   // ifstream input_file(path);
+   // if (!input_file.is_open())
+   // {
+   //    cerr << "Could not open the file - '"
+   //         << path << "'" << endl;
+   //    exit(EXIT_FAILURE);
+   // };
+   // return string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+   std::ifstream input_file(path);
    if (!input_file.is_open())
    {
       cerr << "Could not open the file - '"
            << path << "'" << endl;
       exit(EXIT_FAILURE);
    };
-   return string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+
+    std::stringstream strStream;
+    strStream << input_file.rdbuf(); //read the file
+    return strStream.str(); //str holds the content of the file
 }
 
 struct placeholder {
@@ -119,29 +130,45 @@ int main()
 
       auto e = data.at(i);
       std::string s = read_file_content(e.file_name);
+      stringstream ss_expr;
+      stringstream ss_format;
       for (size_t i = 0; i < e.placeholder_vector.size(); i++)
       {
          auto current = e.placeholder_vector.at(i);
          cout << current.haystack << ":" << substr_occurrence(s, current.haystack) << endl;
          // TODO: occurance check
          
+         auto escaped = escape_string_for_regex(current.haystack);
+         auto replacement = escaped;
+         ss_expr << "(" + escaped + ")";
+         auto pos = replacement.find(current.needle);
+         if (pos == replacement.npos) {
+            cerr << "invalid";
+            return EXIT_FAILURE;
+         }
+         ss_format << "(?" << (i + 1) << replacement.replace(pos, current.needle.length(), "ypypoypoy") << ")";
 
-
+         if (i < e.placeholder_vector.size() - 1) {
+            ss_expr << "|";
+         }
       }
-   } 
+      
+      boost::regex e2(ss_expr.str());
+      // //e2.assign("(" + escape_string_for_regex(current.haystack) + ")|(def)");
+      // //"(?1<1>$&</1>)
+      // auto src = escape_string_for_regex(current.haystack);
 
-   boost::regex e2;
-   e2.assign("(" + escape_string_for_regex(current.haystack) + ")|(def)");
-   //"(?1<1>$&</1>)
-   auto src = escape_string_for_regex(current.haystack);
+      // auto new_content = 
+      // temp = new_content;
 
-   auto new_content = src.replace(src.find(current.needle), current.needle.length(), "ypypoypoy");
-   temp = new_content;
-   
-   string format_string = "(?1" + temp + ")(?2<2>$&<2>)";
-
-   auto c = boost::regex_replace(s, e2, format_string.c_str(), boost::match_default | boost::format_all);
-   std::cout << c;
+      // string format_string = "(?1" + temp + ")(?2<2>$&<2>)";
+      auto c = boost::regex_replace(s, e2, ss_format.str().c_str(), boost::match_default | boost::format_all);
+      std::cout << c;
+      std::ofstream out("output.txt");
+      out << c;
+      out.close();
+   }
+   cout << "complete." << endl;
    std::cin.get();
    return 0;
 }

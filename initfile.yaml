@@ -2,9 +2,6 @@ CMakeLists.txt:
 - haystack: project("initializer")
   needle: initializer
   occurrence: 1
-- haystack: project("initializer")
-  needle: initializer
-  occurrence: 1
 # - haystack: project("initializer")
 #   needle: initializer
 #   occurrence: 1 
