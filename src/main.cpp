@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <boost/regex.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/yaml.h"
@@ -73,6 +74,7 @@ struct placeholder
    string haystack;
    string needle;
    string occurrence;
+   string error;
 };
 
 struct entry
@@ -133,24 +135,34 @@ int main()
 
    for (int i = 0; i < data.size(); i++)
    {
-      // TODO
-      bool pass = false;
-
       auto e = data.at(i);
       std::string s = read_file_content(e.file_name);
       stringstream ss_expr;
       stringstream ss_format;
+      bool to_continue = true;
       for (size_t i = 0; i < e.placeholder_vector.size(); i++)
       {
          auto current = e.placeholder_vector.at(i);
-         cout << current.haystack << ":" << substr_occurrence(s, current.haystack) << endl;
-         // TODO: occurance check
+
+         try
+         {
+            if (substr_occurrence(s, current.haystack) != boost::lexical_cast<int>(current.occurrence))
+            {
+               current.error = "occurrence does not match";
+               to_continue = false;
+            }
+         }
+         catch (boost::bad_lexical_cast)
+         {
+            current.error = "conversion failed";
+            to_continue = false;
+         }
 
          auto escaped = escape_string_for_regex(current.haystack);
          auto replacement = escaped;
          ss_expr << "(" + escaped + ")";
          auto pos = current.haystack.find(current.needle);
-         cout << "needle:" << current.needle;
+         //cout << "needle:" << current.needle;
          if (pos == std::string::npos)
          {
             cerr << "invalid";
@@ -164,17 +176,23 @@ int main()
          }
       }
 
+      if (!to_continue) {
+         cerr << "file is outdate" << endl;
+         return EXIT_FAILURE;
+      }
+
       boost::regex e2(ss_expr.str());
-      
+
       string format = ss_format.str();
-      cout << "format:" << format << endl;
+      //cout << "format:" << format << endl;
       auto c = boost::regex_replace(s, e2, format.c_str(), boost::match_default | boost::format_all);
-      std::cout << c;
+      //std::cout << c;
       std::ofstream out(e.file_name);
       out << c;
       out.close();
    }
-   cout << "complete." << endl;
+   
+   cout << "Complete." << endl;
    std::cin.get();
-   return 0;
+   return EXIT_SUCCESS;
 }
