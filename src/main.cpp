@@ -159,16 +159,21 @@ int main()
          }
 
          auto escaped = escape_string_for_regex(current.haystack);
-         auto replacement = escaped;
+   
          ss_expr << "(" + escaped + ")";
          auto pos = current.haystack.find(current.needle);
          //cout << "needle:" << current.needle;
          if (pos == std::string::npos)
          {
-            cerr << "invalid";
+            cerr << "initfile is outdate" << endl;
             return EXIT_FAILURE;
          }
-         ss_format << "(?" << (i + 1) << escape_string_for_regex(current.haystack.replace(pos, current.needle.length(), "ypypoypoy")) << ")";
+
+         string replacement;
+         cout << "what to replace \"" << current.haystack << "\"?" << endl;
+         cin >> replacement;
+
+         ss_format << "(?" << (i + 1) << escape_string_for_regex(current.haystack.replace(pos, current.needle.length(), replacement)) << ")";
 
          if (i < e.placeholder_vector.size() - 1)
          {
@@ -177,7 +182,7 @@ int main()
       }
 
       if (!to_continue) {
-         cerr << "file is outdate" << endl;
+         cerr << "initfile is outdate" << endl;
          return EXIT_FAILURE;
       }
 
@@ -193,6 +198,6 @@ int main()
    }
    
    cout << "Complete." << endl;
-   std::cin.get();
+   cin.get();
    return EXIT_SUCCESS;
 }

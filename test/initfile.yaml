@@ -1,0 +1,11 @@
+CMakeLists.txt:
+- haystack: project("testing")
+  needle: testing
+  occurrence: 1
+- haystack: set(CMAKE_CXX_STANDARD 17)
+  needle: 17
+  occurrence: 1
+.vscode/launch.json:
+- haystack: '"cppStandard": "c++11"'
+  needle: c++11
+  occurrence: 1
