@@ -20,4 +20,7 @@ CMakeLists.txt:
 
 ### to be initialized
 - iris spa
+- pwa
+  - start_url,short_name,icons,name
+
 - cpp full setup
