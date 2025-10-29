@@ -18,9 +18,15 @@ CMakeLists.txt:
   occurrence: 1
 ```
 
+
+
 ### to be initialized
 - iris spa
 - pwa
   - start_url,short_name,icons,name
-
 - cpp full setup
+- typescript
+  - https://github.com/facebook/yoga/tree/main/javascript (change it to webpack)
+- typescript emscripten
+  - https://github.com/facebook/yoga/tree/main/javascript
+
