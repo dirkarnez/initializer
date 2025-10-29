@@ -27,6 +27,8 @@ CMakeLists.txt:
 - cpp full setup
 - typescript
   - https://github.com/facebook/yoga/tree/main/javascript (change it to webpack)
+  - https://github.com/gkjohnson/three-gpu-pathtracer/tree/main
 - typescript emscripten
   - https://github.com/facebook/yoga/tree/main/javascript
+
 
